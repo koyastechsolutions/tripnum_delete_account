@@ -23,3 +23,6 @@ npm-debug.log*
 
 # Node modules (if you add any build tools)
 node_modules/
+
+# Build output directory
+public/
