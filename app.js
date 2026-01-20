@@ -1,10 +1,25 @@
 // ===============================
+// Prevent Double Initialization
+// ===============================
+(function() {
+  'use strict';
+  
+  // Prevent script from running twice
+  if (window.appInitialized) {
+    console.warn('⚠️ App already initialized, skipping...');
+    return;
+  }
+  window.appInitialized = true;
+
+// ===============================
 // Supabase Client (IMPORTANT)
 // ===============================
+// Get Supabase client from window (set by config.js)
 const supabase = window.supabaseClient;
 
 if (!supabase) {
   console.error("❌ Supabase client not initialized. Check config.js load order.");
+  console.error("Available on window:", Object.keys(window).filter(k => k.includes('supabase')));
   throw new Error("Supabase client missing");
 }
 
@@ -81,34 +96,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ===============================
 // Login Handler
 // ===============================
-loginForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-  loginError.classList.add('hidden');
-  loginBtnText.textContent = 'Signing in...';
-  loginSpinner.classList.remove('hidden');
+    if (!email || !password) {
+      loginError.textContent = 'Please enter both email and password';
+      loginError.classList.remove('hidden');
+      return;
+    }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
+    loginError.classList.add('hidden');
+    loginBtnText.textContent = 'Signing in...';
+    loginSpinner.classList.remove('hidden');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      loginBtnText.textContent = 'Sign in to Continue';
+      loginSpinner.classList.add('hidden');
+
+      if (error) {
+        console.error('❌ Login failed:', error);
+        loginError.textContent = error.message;
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      currentUser = data.user;
+      await checkDeletionRequest();
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      loginBtnText.textContent = 'Sign in to Continue';
+      loginSpinner.classList.add('hidden');
+      loginError.textContent = 'An error occurred during login. Please try again.';
+      loginError.classList.remove('hidden');
+    }
   });
-
-  loginBtnText.textContent = 'Sign in to Continue';
-  loginSpinner.classList.add('hidden');
-
-  if (error) {
-    console.error('❌ Login failed:', error);
-    loginError.textContent = error.message;
-    loginError.classList.remove('hidden');
-    return;
-  }
-
-  currentUser = data.user;
-  await checkDeletionRequest();
-});
+} else {
+  console.error('❌ Login form not found');
+}
 
 // ===============================
 // Logout
@@ -269,3 +303,5 @@ function showLogin() {
   loginForm.reset();
   loginError.classList.add('hidden');
 }
+
+})(); // End IIFE - prevents double initialization
