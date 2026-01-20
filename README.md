@@ -127,6 +127,101 @@ The `account_deletion_requests` table contains:
 - This application only handles the deletion request and stores it in the database
 - You'll need to implement a backend process to actually delete accounts after 10 days
 
+## Deployment to Vercel
+
+### Option 1: Deploy via Vercel CLI
+
+1. **Install Vercel CLI** (if not already installed):
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
+
+3. **Deploy**:
+   ```bash
+   vercel
+   ```
+   
+   Follow the prompts to link your project.
+
+4. **Set Environment Variables**:
+   - Go to your Vercel project dashboard
+   - Navigate to **Settings** → **Environment Variables**
+   - Add:
+     - `SUPABASE_URL` = Your Supabase project URL
+     - `SUPABASE_ANON_KEY` = Your Supabase anon key
+
+5. **Update config.js** to use environment variables (see below)
+
+### Option 2: Deploy via GitHub
+
+1. **Push your code to GitHub**:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-github-repo-url>
+   git push -u origin main
+   ```
+
+2. **Import to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click **Add New Project**
+   - Import your GitHub repository
+   - Vercel will auto-detect it as a static site
+
+3. **Set Environment Variables**:
+   - In your Vercel project settings
+   - Go to **Environment Variables**
+   - Add `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+
+4. **Deploy**: Vercel will automatically deploy on every push to your main branch
+
+### Using Environment Variables
+
+For production deployment, update `config.js` to use environment variables:
+
+```javascript
+// Supabase Configuration
+// Uses environment variables for production, fallback for local development
+window.SUPABASE_URL = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
+window.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+
+// Initialize Supabase client
+window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+```
+
+**Note**: Since this is a client-side app, environment variables need to be injected at build time. For Vercel, you can use `@vercel/env` or inject them via build-time replacement.
+
+### Alternative: Use Vercel Environment Variables with Build Script
+
+Create a simple build script that replaces placeholders:
+
+1. Create `build.js`:
+```javascript
+const fs = require('fs');
+const config = fs.readFileSync('config.js', 'utf8');
+const updated = config
+  .replace('YOUR_SUPABASE_URL', process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL')
+  .replace('YOUR_SUPABASE_ANON_KEY', process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY');
+fs.writeFileSync('config.js', updated);
+```
+
+2. Update `package.json`:
+```json
+{
+  "scripts": {
+    "build": "node build.js"
+  }
+}
+```
+
+**Recommended Approach**: Keep your Supabase credentials in `config.js` but add it to `.gitignore`, then manually add it on Vercel or use Vercel's environment variable injection.
+
 ## License
 
 MIT License - feel free to use this project for your needs.

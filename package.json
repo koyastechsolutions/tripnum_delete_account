@@ -1,0 +1,16 @@
+{
+  "name": "account-deletion-request",
+  "version": "1.0.0",
+  "description": "Account deletion request system with Supabase authentication",
+  "scripts": {
+    "start": "npx http-server -p 8000",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "supabase",
+    "account-deletion",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT"
+}

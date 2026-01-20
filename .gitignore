@@ -1,5 +1,6 @@
 # Supabase Configuration (contains sensitive keys)
-config.js
+# Note: For Vercel deployment, use environment variables instead
+# config.js
 
 # OS Files
 .DS_Store
